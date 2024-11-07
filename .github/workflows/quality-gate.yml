@@ -72,8 +72,6 @@ jobs:
                 toolchain: ${{ matrix.toolchain }}
                 default: true
           - uses: Swatinem/rust-cache@v1
-          - name: Add wasm32 target
-            run: rustup target add wasm32-unknown-unknown
           - name: Check with with features
             run: cargo check --verbose --all-features
           - name: Run tests with features
@@ -87,4 +85,5 @@ jobs:
                     export CC=/opt/homebrew/opt/llvm/bin/clang
                 export AR=/opt/homebrew/opt/llvm/bin/llvm-ar
                 fi
+                rustup target add wasm32-unknown-unknown
                 cargo build --target wasm32-unknown-unknown 
