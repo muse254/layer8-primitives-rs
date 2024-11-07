@@ -1,4 +1,4 @@
-use layer8_primitives_rs::crypto::{generate_key_pair, KeyUse};
+use layer8_primitives::crypto::{generate_key_pair, KeyUse};
 
 #[test]
 fn jwt_to_derivatives_test() {

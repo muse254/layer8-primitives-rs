@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use uuid::Uuid;
 
-use layer8_primitives_rs::{
+use layer8_primitives::{
     crypto::{generate_key_pair, jwk_from_map, KeyUse},
     types::{self, Request},
 };
@@ -123,7 +123,7 @@ mod http_mock_server {
         Request, Response,
     };
     use hyper_util::rt::TokioIo;
-    use layer8_primitives_rs::{
+    use layer8_primitives::{
         crypto::{base64_to_jwk, generate_key_pair, Jwk, KeyUse},
         types,
     };

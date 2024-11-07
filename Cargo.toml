@@ -1,5 +1,5 @@
 [package]
-name = "layer8-primitives-rs"
+name = "layer8-primitives"
 version = "0.1.0"
 edition = "2021"
 authors = ["Osoro Bironga <fanosoro@gmail.com>"]
