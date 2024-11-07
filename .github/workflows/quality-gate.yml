@@ -1,0 +1,90 @@
+name: Quality Gate
+
+permissions:
+  pull-requests: write
+  contents: write
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: '-D warnings'
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: short
+
+jobs:
+    audit:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout Sources
+            uses: actions/checkout@v3
+          - name: Install Toolchain
+            uses: actions-rs/toolchain@v1
+            with:
+              profile: minimal
+              toolchain: stable
+              default: true
+          - uses: Swatinem/rust-cache@v1
+          - name: Install Audit
+            run: cargo install cargo-audit
+          - name: Run Audit
+            run: cargo audit
+    
+    lint:
+        name: lint-and-format
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v3
+          - name: Install stable toolchain
+            uses: actions-rs/toolchain@v1
+            with:
+                profile: minimal
+                toolchain: stable
+                default: true
+                components: rustfmt, clippy
+          - uses: Swatinem/rust-cache@v1
+          - name: Test Format
+            run: cargo fmt -- --check
+          - run: cargo clippy --tests --all-features --all-targets -- -D clippy::all
+            
+    cargo-doc:
+        runs-on: ubuntu-20.04
+        steps:
+          - uses: actions/checkout@v4
+          - name: run cargo doc
+            run: RUSTDOCFLAGS="-D warnings" cargo doc
+
+    test:
+        strategy:
+          matrix:
+            platform: [ubuntu-latest, macos-latest]
+            toolchain: [stable]
+        runs-on: ${{ matrix.platform }}     
+        steps:
+          - uses: actions/checkout@v2
+          - name: "${{ matrix.toolchain }}"
+            uses: actions-rs/toolchain@v1
+            with:
+                profile: minimal
+                toolchain: ${{ matrix.toolchain }}
+                default: true
+          - uses: Swatinem/rust-cache@v1
+          - name: Add wasm32 target
+            run: rustup target add wasm32-unknown-unknown
+          - name: Check with with features
+            run: cargo check --verbose --all-features
+          - name: Run tests with features
+            run: cargo test --verbose --all-features
+          - name: Compatible with wasm
+            run: |
+                # If macOs install llvm with brew
+                if [[ "$RUNNER_OS" == "macOS" ]]; then
+                    brew install llvm
+                    export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+                    export CC=/opt/homebrew/opt/llvm/bin/clang
+                export AR=/opt/homebrew/opt/llvm/bin/llvm-ar
+                fi
+                cargo build --target wasm32-unknown-unknown 
