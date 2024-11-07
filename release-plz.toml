@@ -1,0 +1,4 @@
+[[package]]
+name = "layer8-primitives"
+changelog_update = true
+changelog_path = "./CHANGELOG.md"
