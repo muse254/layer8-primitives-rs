@@ -179,8 +179,8 @@ pub struct Response {
 /// This struct is used to serialize and deserialize the encrypted data, for the purpose of
 /// "round-tripping" the data through the proxy server.
 #[derive(Deserialize, Serialize)]
-struct RoundtripEnvelope {
-    data: String,
+pub struct RoundtripEnvelope {
+    pub data: String,
 }
 
 impl RoundtripEnvelope {
