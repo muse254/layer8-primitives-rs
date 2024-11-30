@@ -70,14 +70,16 @@ impl Client {
         .to_json_bytes();
 
         let url = {
-            if is_static {
-                &self
-                    .0
-                    .join(Url::parse(backend_url).map_err(|e| e.to_string())?.path())
-                    .map_err(|e| e.to_string())?
-            } else {
-                &self.0
+            let parsed_backend_url = Url::parse(backend_url).map_err(|e| e.to_string())?;
+            let mut url = self
+                .0
+                .join(parsed_backend_url.path())
+                .map_err(|e| e.to_string())?;
+
+            if let Some(query) = parsed_backend_url.query() {
+                url.set_query(Some(query));
             }
+            url
         };
 
         // if port is present, let's add it to the url
