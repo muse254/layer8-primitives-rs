@@ -167,9 +167,11 @@ pub struct Request {
     pub method: String,
     pub headers: HashMap<String, String>,
     pub body: Vec<u8>,
+
+    /// This points to the absolute path of the URL. Including any query parameters if any.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "__url_path")]
-    pub uri_path: Option<String>,
+    pub url_path: Option<String>,
 }
 
 /// This struct represents the response that is received from the backend server and packaged by the middleware.

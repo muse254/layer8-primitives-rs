@@ -50,7 +50,7 @@ async fn roundtrip_test() {
             ("X-Test-Header".to_string(), "test".to_string()),
         ]),
         body: br#"{"test": "test"}"#.to_vec(),
-        uri_path: None,
+        url_path: None,
     };
 
     // doing a transfer call
