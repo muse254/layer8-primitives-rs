@@ -211,3 +211,8 @@ impl RoundtripEnvelope {
         serde_json::from_slice(data).map_err(|e| e.to_string())
     }
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ServeStatic {
+    pub __url_path: String,
+}
