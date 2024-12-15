@@ -169,7 +169,7 @@ pub struct Request {
     pub body: Vec<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "__url_path")]
-    pub url_path: Option<String>,
+    pub uri_path: Option<String>,
 }
 
 /// This struct represents the response that is received from the backend server and packaged by the middleware.
