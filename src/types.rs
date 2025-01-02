@@ -7,16 +7,19 @@ use url::Url;
 
 use crate::crypto::Jwk;
 
-/// This struct represents the backend server where the data is intended to be sent.
+/// This struct represents the proxy server where the data is intended to be sent.
 #[derive(Clone, Debug)]
 pub struct Client(Url);
+
+/// This serves as extra doc that the client is specifically a proxy client.
+type ProxyClient = Client;
 
 /// This function helps create the client using the provided URL.
 pub fn new_client(url: &str) -> Result<Client, String> {
     url::Url::parse(url).map_err(|e| e.to_string()).map(Client)
 }
 
-impl Client {
+impl ProxyClient {
     /// Handles the exchange to the proxy server. It encrypts the request, sends it and decrypts the response.
     pub async fn r#do(
         &self,
@@ -69,23 +72,27 @@ impl Client {
         )
         .to_json_bytes();
 
-        let url = {
+        let (proxy_url, forward_to_host) = {
             let parsed_backend_url = Url::parse(backend_url).map_err(|e| e.to_string())?;
-            let mut url = self
+            let mut proxy_url = self
                 .0
                 .join(parsed_backend_url.path())
                 .map_err(|e| e.to_string())?;
 
             if let Some(query) = parsed_backend_url.query() {
-                url.set_query(Some(query));
+                proxy_url.set_query(Some(query));
             }
-            url
-        };
 
-        // if port is present, let's add it to the url
-        let port = match Url::parse(backend_url).map_err(|e| e.to_string())?.port() {
-            Some(port) => format!(":{}", port),
-            None => "".to_string(),
+            let mut forward_to_host = parsed_backend_url
+                .host_str()
+                .ok_or_else(|| "backend_url expected to have a host".to_string())?
+                .to_string();
+
+            if let Some(port) = parsed_backend_url.port() {
+                forward_to_host.push_str(&format!(":{}", port));
+            }
+
+            (proxy_url, forward_to_host)
         };
 
         // adding headers
@@ -93,18 +100,15 @@ impl Client {
         {
             header_map.insert(
                 "X-Forwarded-Host",
-                format!(
-                    "{}{}",
-                    url.host().expect("expected host to be present; qed"),
-                    port
-                )
-                .parse()
-                .expect("expected host as header value to be valid; qed"),
+                forward_to_host
+                    .parse()
+                    .expect("expected host as header value to be valid; qed"),
             );
 
             header_map.insert(
                 "X-Forwarded-Proto",
-                HeaderValue::from_str(url.scheme()).expect("expected scheme to be valid; qed"),
+                HeaderValue::from_str(proxy_url.scheme())
+                    .expect("expected scheme to be valid; qed"),
             );
 
             header_map.insert(
@@ -132,7 +136,7 @@ impl Client {
         }
 
         let server_resp = reqwest::Client::new()
-            .post(url.as_str())
+            .post(proxy_url.as_str())
             .body(request_data)
             .headers(header_map)
             .send()
