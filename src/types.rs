@@ -72,8 +72,8 @@ impl ProxyClient {
         )
         .to_json_bytes();
 
+        let parsed_backend_url = Url::parse(backend_url).map_err(|e| e.to_string())?;
         let (proxy_url, forward_to_host) = {
-            let parsed_backend_url = Url::parse(backend_url).map_err(|e| e.to_string())?;
             let mut proxy_url = self
                 .0
                 .join(parsed_backend_url.path())
@@ -88,7 +88,7 @@ impl ProxyClient {
                 .ok_or_else(|| "backend_url expected to have a host".to_string())?
                 .to_string();
 
-            if let Some(port) = parsed_backend_url.port() {
+            if let Some(port) = &parsed_backend_url.port() {
                 forward_to_host.push_str(&format!(":{}", port));
             }
 
@@ -107,7 +107,7 @@ impl ProxyClient {
 
             header_map.insert(
                 "X-Forwarded-Proto",
-                HeaderValue::from_str(proxy_url.scheme())
+                HeaderValue::from_str(parsed_backend_url.scheme())
                     .expect("expected scheme to be valid; qed"),
             );
 
